@@ -103,13 +103,80 @@ No hace falta `main` completo, pero el código debe ser compilable con inclusion
 
 Enumere las cinco letras de **SOLID** y escriba **una frase** por letra definiendo la idea central. Luego elija **una** letra y ejemplifique con un contraejemplo (código o descripción) de violación.
 
+S – Single Responsibility Principle
+Una clase debe tener una sola razón para cambiar.
+
+O – Open/Closed Principle
+El código debe estar abierto a extensión, cerrado a modificación.
+
+L – Liskov Substitution Principle
+Una subclase debe poder reemplazar a su clase base sin romper el programa.
+
+I – Interface Segregation Principle
+No obligar a clases a implementar interfaces que no necesitan.
+
+D – Dependency Inversion Principle
+Depender de abstracciones, no de implementaciones concretas.
+
+Contraejemplo:
+class Reporte {
+public:
+void generar() { /* lógica */ }
+void guardarEnArchivo() { /* archivo */ }
+void enviarEmail() { /* email */ }
+};
+
 ---
 
 ### Ejercicio 2 – Patrón Delegate (20 pts)
 
 **a)** (10 pts) Explique en qué consiste el patrón **Delegate** y en qué se diferencia de heredar directamente toda la implementación.
 
+El patrón Delegate consiste en que un objeto delegue parte de su comportamiento a otro objeto mediante composición.
+Herencia: reutiliza comportamiento acoplado
+Delegate: reutiliza comportamiento flexible y reemplazable
+
 **b)** (10 pts) Esquematice (diagrama en texto o lista de clases) un diseño donde `Reporte` delegue el destino de salida en una interfaz `DestinoSalida` con dos implementaciones: `DestinoConsola` y `DestinoArchivo`. Incluya los métodos esenciales (por ejemplo `void escribir(const string&)`).
+
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+class DestinoSalida {
+public:
+virtual void escribir(const string& texto) = 0;
+virtual ~DestinoSalida() {}
+};
+
+class DestinoConsola : public DestinoSalida {
+public:
+void escribir(const string& texto) override {
+cout << texto << endl;
+}
+};
+
+class DestinoArchivo : public DestinoSalida {
+private:
+ofstream archivo;
+public:
+DestinoArchivo(string nombre) {
+archivo.open(nombre);
+}
+void escribir(const string& texto) override {
+archivo << texto << endl;
+}
+};
+
+class Reporte {
+private:
+DestinoSalida* destino;
+public:
+Reporte(DestinoSalida* d) : destino(d) {}
+
+    void generar() {
+        destino->escribir("Reporte generado");
+    }
+};
 
 ---
 
@@ -117,7 +184,35 @@ Enumere las cinco letras de **SOLID** y escriba **una frase** por letra definien
 
 **a)** (10 pts) Explique la jerarquía típica `exception` / `runtime_error` / `logic_error` y cuándo usar excepciones frente a códigos de error.
 
+exception → base general
+logic_error → errores de programación (ej: argumentos inválidos)
+runtime_error → errores en ejecución (ej: archivo no encontrado)
+
+Excepciones cuando:
+
+El error no puede manejarse localmente
+Se quiere separar lógica de error
+
 **b)** (10 pts) Escriba una función `double divisionSegura(double a, double b)` que lance `invalid_argument` o `runtime_error` si `b == 0`, y un `main` o fragmento que capture y muestre el mensaje.
+
+#include <iostream>
+#include <stdexcept>
+using namespace std;
+
+double divisionSegura(double a, double b) {
+if (b == 0) {
+throw invalid_argument("Division por cero");
+}
+return a / b;
+}
+
+int main() {
+try {
+cout << divisionSegura(10, 0);
+} catch (const exception& e) {
+cout << "Error: " << e.what() << endl;
+}
+}
 
 ---
 
@@ -125,7 +220,31 @@ Enumere las cinco letras de **SOLID** y escriba **una frase** por letra definien
 
 **a)** (10 pts) Enuncie el **Principio de Sustitución de Liskov** en términos de contrato (precondiciones, postcondiciones, invariantes).
 
+Una subclase debe cumplir:
+
+No reforzar precondiciones
+No debilitar postcondiciones
+Mantener invariantes
+
+Es decir: debe comportarse como la clase base esperaba.
+
 **b)** (10 pts) Describa un ejemplo de **violación** de LSP en una jerarquía (por ejemplo una derivada que refuerza precondiciones o que lanza excepciones que la base no documentaba). No copie textualmente un ejemplo de clase; invente uno coherente.
+
+class Pago {
+public:
+virtual void procesar(double monto) {
+// acepta cualquier monto positivo
+}
+};
+
+class PagoCripto : public Pago {
+public:
+void procesar(double monto) override {
+if (monto < 100) {
+throw runtime_error("Minimo 100");
+}
+}
+};
 
 ---
 
@@ -133,7 +252,73 @@ Enumere las cinco letras de **SOLID** y escriba **una frase** por letra definien
 
 **a)** (8 pts) Explique cómo el Decorator cumple una forma de **OCP** (extender comportamiento sin modificar la clase original).
 
+Decorator permite agregar comportamiento dinámicamente sin modificar la clase base.
+
+Cumple OCP porque:
+
+No se modifica CafeSimple
+Se agregan nuevas clases
+
 **b)** (12 pts) Diseñe en C++ (interfaces + clases) un componente `Bebida` con `double costo()` y `string descripcion()`, un `CafeSimple` concreto, y decoradores `ConLeche` y `ConAzucar` que encadenen sobre otro `Bebida*`. Incluya un pequeño ejemplo de uso que imprima costo y descripción final.
+
+#include <iostream>
+using namespace std;
+
+class Bebida {
+public:
+virtual double costo() = 0;
+virtual string descripcion() = 0;
+virtual ~Bebida() {}
+};
+
+class CafeSimple : public Bebida {
+public:
+double costo() override { return 2.0; }
+string descripcion() override { return "Cafe"; }
+};
+
+class Decorador : public Bebida {
+protected:
+Bebida* bebida;
+public:
+Decorador(Bebida* b) : bebida(b) {}
+};
+
+class ConLeche : public Decorador {
+public:
+ConLeche(Bebida* b) : Decorador(b) {}
+
+    double costo() override {
+        return bebida->costo() + 0.5;
+    }
+
+    string descripcion() override {
+        return bebida->descripcion() + " con leche";
+    }
+};
+
+class ConAzucar : public Decorador {
+public:
+ConAzucar(Bebida* b) : Decorador(b) {}
+
+    double costo() override {
+        return bebida->costo() + 0.2;
+    }
+
+    string descripcion() override {
+        return bebida->descripcion() + " con azucar";
+    }
+};
+
+// Uso
+int main() {
+Bebida* cafe = new CafeSimple();
+cafe = new ConLeche(cafe);
+cafe = new ConAzucar(cafe);
+
+    cout << cafe->descripcion() << endl;
+    cout << cafe->costo() << endl;
+}
 
 ---
 
@@ -159,6 +344,18 @@ Enumere las cinco letras de **SOLID** y escriba **una frase** por letra definien
 
 Explique cómo el **Principio de Parnas** reduce el acoplamiento entre módulos. Dé un ejemplo donde una clase exponga solo dos métodos públicos mientras mantiene detalles de representación en privado.
 
+El principio de Parnas propone ocultar decisiones de diseño que pueden cambiar, reduciendo acoplamiento
+
+class Lista {
+private:
+int* datos;
+int tamaño;
+
+public:
+void agregar(int x);
+int obtener(int i);
+};
+
 ---
 
 ### Ejercicio 2 – Lectura de archivo de números (25 pts)
@@ -168,11 +365,51 @@ Escriba un programa o funciones que:
 2. Calcule **suma**, **promedio** y **cantidad** de valores leídos correctamente.
 3. Si el archivo no existe o está vacío, informe el error de forma controlada (excepción o estado del flujo con mensaje claro).
 
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+void procesarArchivo() {
+ifstream archivo("datos.txt");
+
+    if (!archivo) {
+        throw runtime_error("No se pudo abrir el archivo");
+    }
+
+    double num, suma = 0;
+    int count = 0;
+
+    while (archivo >> num) {
+        suma += num;
+        count++;
+    }
+
+    if (count == 0) {
+        throw runtime_error("Archivo vacio");
+    }
+
+    cout << "Suma: " << suma << endl;
+    cout << "Promedio: " << suma / count << endl;
+    cout << "Cantidad: " << count << endl;
+}
+
 ---
 
 ### Ejercicio 3 – Escritura formateada (15 pts)
 
 Usando `<iomanip>`, escriba un fragmento que imprima en consola una tabla con tres columnas: `ID`, `Nombre`, `Puntaje`, con anchos fijos y puntaje con dos decimales.
+
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+cout << setw(5) << "ID"
+<< setw(15) << "Nombre"
+<< setw(10) << "Puntaje" << endl;
+
+cout << setw(5) << 1
+<< setw(15) << "Ana"
+<< setw(10) << fixed << setprecision(2) << 95.5 << endl;
 
 ---
 
@@ -180,9 +417,37 @@ Usando `<iomanip>`, escriba un fragmento que imprima en consola una tabla con tr
 
 **a)** (15 pts) Defina una `struct` trivial `Registro` con al menos tres campos (por ejemplo `int id`, `double valor`, `char tipo`) y escriba código que guarde un arreglo o `vector` de `Registro` en un archivo **binario** y luego lo vuelva a leer, verificando que la cantidad leída coincide con la escrita.
 
+#include <fstream>
+using namespace std;
+
+struct Registro {
+int id;
+double valor;
+char tipo;
+};
+
+void guardar() {
+ofstream out("data.bin", ios::binary);
+
+    Registro r[2] = {{1, 10.5, 'A'}, {2, 20.5, 'B'}};
+
+    out.write(reinterpret_cast<char*>(r), sizeof(r));
+}
+
+void leer() {
+ifstream in("data.bin", ios::binary);
+
+    Registro r[2];
+
+    in.read(reinterpret_cast<char*>(r), sizeof(r));
+}
+
 **b)** (10 pts) Mencione un riesgo de portabilidad al compartir archivos binarios entre plataformas y cómo mitigarlo (aunque sea conceptualmente).
 
----
+Problema: Diferente tamaño de tipos o endianess
+
+Solución: Usar formato estándar (JSON/binario estructurado) o serialización controlada
+
 
 ### Ejercicio 5 – Integración corta (20 pts)
 

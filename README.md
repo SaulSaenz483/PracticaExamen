@@ -23,8 +23,12 @@
 
 **a)** (8 pts) Distinga en una tabla breve tres tipos de relación entre clases: herencia (“es-un”), composición/agregación (“tiene-un”) y dependencia (“usa-a”). Incluya un ejemplo de cada uno en el contexto de un sistema de software (no hace falta código).
 
+    |   Herencia    Estudiante es una Persona
+    |   Composicion Casa tiene Habitaciones
+    |   Dependecia  Carro usa un Motor
 **b)** (12 pts) Escriba un fragmento de C++ con clases `Figura` (base, con al menos un método virtual puro `double area() const`) y `Circulo` (derivada). En `main`, cree un `Circolo` en el heap, guárdelo en un puntero a `Figura`, invoque `area()` a través de ese puntero y libere memoria correctamente. Explique en **una oración** por qué lo anterior es un **upcast** y por qué es seguro.
 
+        
 ---
 
 ### Ejercicio 2 – Downcast seguro (20 pts)
@@ -41,17 +45,27 @@ Dos clases `A` y `B` necesitan referenciarse mutuamente en sus interfaces (por e
 
 **a)** (8 pts) Describa el problema de **inclusión circular** de encabezados.
 
+El problema de la inclusión circular recae en que el programa va a estar buscado una validacion de una clase y la otra. Por así decirlo A le va a pedir a B y B le va a pedir a A. Estoy provocaria que entren en un bucle del que no pueden salir
+
 **b)** (7 pts) Indique la solución estándar con **forward declaration** y en qué archivo (`.h` vs `.cpp`) suele incluirse la definición completa de la otra clase.
+
+La declaracion por adelantado se realiza normalmente en el .h y la declaracion completa en  el .cpp o sea #include "ClaseB.h"
 
 ---
 
 ### Ejercicio 4 – OCP y KISS (25 pts)
 
 **a)** (12 pts) Defina el **Principio Abierto/Cerrado** (Martin) en sus propias palabras y dé un ejemplo donde *violar* OCP obligaría a modificar una clase central ante cada nueva variante.
+    El principio abierto cerrado es que un programa esté abierto a ser extendido/ampliado y cerrado a las modificaciones.
+    Un ejemplo de la violacion del principio ocurre cuando no se utiliza polimorfismo. Imaginemos que creamos una clase de Figura pero en  esta clase no utilizamos el polimorfismo y creamos un metodo de calcular area.
+    Al no usar el polimorfismo tendriamos que modificar la clase cada vez que se agregue una nueva figura.
 
 **b)** (8 pts) Explique **KISS** y **YAGNI** y cómo evitan sobreingeniería.
-
+    
+El principio KISS no es dice que un programa no tiene que ser innecesariamente complejo. Mantener y utilizar solo las cosas necesarias para así no sobrecargar el codigo Keep It Super Simple
+Y el principio YAGNI nos insta a preguntarnos si realmente algo que hacemos es necesario para un programa, realmente vamos a utilizar algo? Nos ayuda a no agregar codigo que no sea estrictamente necesario
 **c)** (5 pts) Relacione **Principio de Parnas** con “ocultar decisiones de diseño” mediante interfaces mínimas.
+El principio de Parnas nos permite ocultar del usuario o de vistas no deseadas la informacion del codigo. No se debe saber lo que no este necesario conocer. Un usuario no necesita saber ni tener acceso a todo el funcionamiento de un cajero automatico, solo requiere saber cuales su saldo y poder sacarlo.
 
 ---
 
